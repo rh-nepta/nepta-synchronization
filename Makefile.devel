@@ -1,0 +1,4 @@
+# The name of the package under test:
+PACKAGE_NAME=perf_synchronization-devel
+
+FILES += Makefile.devel
