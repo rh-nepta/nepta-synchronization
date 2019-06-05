@@ -1,0 +1,12 @@
+[Unit]
+Description=Beaker test sycnhronization service
+Wants=network-online.target
+After=network-online.target
+After=time-sync.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/sync_server
+
+[Install]
+WantedBy=multi-user.target
