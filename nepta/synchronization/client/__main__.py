@@ -3,7 +3,7 @@ from logging import info, error
 import sys
 import argparse
 
-from synchronization import client
+from nepta.synchronization import client
 
 DEFAULT_LOGGING_MODE = 'WARNING'
 

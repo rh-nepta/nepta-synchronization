@@ -3,7 +3,7 @@ import sys
 import signal
 
 import argparse
-from synchronization import server
+from nepta.synchronization import server
 
 
 def exitf(a, b):
