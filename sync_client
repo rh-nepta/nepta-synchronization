@@ -1,4 +1,4 @@
 #!/usr/bin/env python3
 
-from synchronization.client import __main__
+from nepta.synchronization.client import __main__
 __main__.main()

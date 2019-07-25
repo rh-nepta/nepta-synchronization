@@ -3,7 +3,7 @@ import os
 from setuptools import setup
 from setuptools.command.install import install
 
-from synchronization import __version__ as version, __author__ as author, __email__ as email
+from nepta.synchronization import __version__ as version, __author__ as author, __email__ as email
 
 
 class PostInstallCommand(install):
@@ -13,21 +13,22 @@ class PostInstallCommand(install):
 
 
 setup(
-    name='synchronization',
+    name='nepta-synchronization',
     version=version,
     description='Synchronization for Beaker tasks',
     author=author,
     author_email=email,
     include_package_data=True,
+    namespace_packages=['nepta'],
     packages=[
-        'synchronization',
-        'synchronization.client',
-        'synchronization.server',
+        'nepta.synchronization',
+        'nepta.synchronization.client',
+        'nepta.synchronization.server',
     ],
     entry_points={
         'console_scripts': [
-            'sync_client = synchronization.client.__main__:main',
-            'sync_server = synchronization.server.__main__:main',
+            'sync_client = nepta.synchronization.client.__main__:main',
+            'sync_server = nepta.synchronization.server.__main__:main',
         ],
     },
     data_files=[
