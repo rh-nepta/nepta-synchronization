@@ -6,4 +6,4 @@ rpms-clean:
 rpms:
 	echo 'version is' $(VERSION)
 	mkdir -p rpms
-	python setup.py bdist_rpm
+	python3 setup.py bdist_rpm

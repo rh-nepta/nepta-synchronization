@@ -1,4 +1,4 @@
 # The name of the package under test:
-PACKAGE_NAME=perf_synchronization
+PACKAGE_NAME=nepta-synchronization
 
 FILES += Makefile.production
