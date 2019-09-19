@@ -1,4 +1,4 @@
-VERSION := $(shell python <<< 'import synchronization; print synchronization.__version__')
+VERSION := $(shell python <<< 'from nepta import synchronization; print synchronization.__version__')
 
 rpms-clean:
 	rm -rf rpms build dist synchronization.egg-info
