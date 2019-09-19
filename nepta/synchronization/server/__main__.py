@@ -1,9 +1,13 @@
+import logging
 from logging import info
 import sys
 import signal
 
 import argparse
 from nepta.synchronization import server
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 
 def exitf(a, b):
