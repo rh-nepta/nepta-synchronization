@@ -60,7 +60,7 @@ class SyncServer(object):
             state_updated = True
 
     def get_state(self, host):
-        info("SyncServer, getting state of %s", host)
+        debug("SyncServer, getting state of %s", host)
         for item in self._store:
             debug("%s == %s" % (host, item.get_host()))
             if item.get_host() == host:
