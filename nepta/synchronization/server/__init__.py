@@ -1,3 +1,4 @@
+import json
 from logging import info, debug
 
 try:
@@ -36,6 +37,35 @@ class HostTestStore(list):
     pass
 
 
+class PersistentTestStore(object):
+
+    def __init__(self, file_name='sync_state.json'):
+        self._file_name = []
+        self._hosts = {}
+
+    def __getitem__(self, key):
+        return self._hosts[key]
+
+    def __setitem__(self, key, value):
+        self._hosts[key] = value
+        value.store = self
+
+    def save(self):
+        store = {}
+        for h in self._hosts:
+            store[h.get_host()] = {'job': h.get_job(), 'state': h.get_state()}
+        with open(self._file_name, 'w') as f:
+            json.dump(store, f)
+
+    def load(self):
+        self._hosts = {}
+        with open(self._file_name, 'r') as f:
+            store = json.load(f)
+            for host, state in store.items():
+                self._hosts[host] = HostJobState(host=host, job=state['job'])
+                self._hosts[host].set_state(state['state'])
+
+
 class SyncServer(object):
 
     def __init__(self, store):
@@ -43,41 +73,33 @@ class SyncServer(object):
 
     def set_state(self, host, job, state):
         info("SyncServer, setting state: host=%s, job=%s, state=%s", host, job, state)
-        state_updated = False
-        for item in self._store:
-            if item.get_host() == host:
-                old_job = item.get_job()
-                debug('SyncServer, updating state: host=%s, old_job=%s, new_job=%s, old_state=%s, new_state=%s', host, old_job, job, item.get_state(), state)
-                item.set_state(state)
-                item.set_job(job)
-                state_updated = True
-
-        if not state_updated:
+        try:
+            old_job = self._store[host].get_job()
+            old_state = self._store[host].get_state()
+            self._store[host].set_job(job)
+            self._store[host].set_state(state)
+            info('SyncServer, updating state: host=%s, old_job=%s, new_job=%s, old_state=%s, new_state=%s', host,
+                  old_job, job, old_state, state)
+        except KeyError:
             debug('SyncServer, creating state: host=%s, job=%s, state=%s', host, job, state)
-            new = HostJobState(host, job)
-            new.set_state(state)
-            self._store.append(new)
-            state_updated = True
+            self._store[host] = HostJobState(host, job)
+            self._store[host].set_state(state)
 
     def get_state(self, host):
-        debug("SyncServer, getting state of %s", host)
-        for item in self._store:
-            debug("%s == %s" % (host, item.get_host()))
-            if item.get_host() == host:
-                state = item.get_state()
-                job = item.get_job()
-                debug('SyncServer, returning state: host=%s, job=%s, state=%s', host, job, state)
-                return job, state
-
-        debug('SyncServer, state not found host: %s', host)
-        return None, None
+        try:
+            item = self._store[host]
+            info('SyncServer, returning state: host=%s, job=%s, state=%s', host, item.get_job(), item.get_state())
+            return item.get_job(), item.get_state()
+        except KeyError:
+            info('SyncServer, state not found host: %s', host)
+            return None, None
 
 
 class ServerCreator(object):
 
     @classmethod
     def create(cls, addr='0.0.0.0', port=8000, log=False):
-        store = HostTestStore()
+        store = PersistentTestStore()
         instance = SyncServer(store)
         xrpc_server = SimpleXMLRPCServer((addr, port), allow_none=True, logRequests=log)
         xrpc_server.register_instance(instance)
