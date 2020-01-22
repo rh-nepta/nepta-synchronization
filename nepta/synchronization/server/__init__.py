@@ -49,7 +49,7 @@ class HostTestStore(list):
 class PersistentTestStore(object):
 
     def __init__(self, file_name='sync_state.json'):
-        self._file_name = []
+        self._file_name = file_name
         self._hosts = {}
 
     def __getitem__(self, key):
@@ -60,11 +60,11 @@ class PersistentTestStore(object):
         value.store = self
 
     def save(self):
-        store = {}
-        for h in self._hosts:
-            store[h.host] = {'job': h.job, 'state': h.state}
+        context = {}
+        for host, state in self._hosts.items():
+            context[state.host] = {'job': state.job, 'state': state.state}
         with open(self._file_name, 'w') as f:
-            json.dump(store, f)
+            json.dump(context, f)
 
     def load(self):
         self._hosts = {}
@@ -92,6 +92,7 @@ class SyncServer(object):
         except KeyError:
             debug('SyncServer, creating state: host=%s, job=%s, state=%s', host, job, state)
             self._store[host] = HostJobState(host, job, state)
+        self._store.save()
 
     def get_state(self, host):
         try:
