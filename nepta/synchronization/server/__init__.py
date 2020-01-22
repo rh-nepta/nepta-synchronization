@@ -14,20 +14,29 @@ class HostJobState(object):
         self._job = job
         self._state = None
 
-    def get_host(self):
+    @property
+    def host(self):
         return self._host
 
-    def set_job(self, job):
-        self._job = job
+    @host.setter
+    def host(self, host):
+        self._host = host
 
-    def get_job(self):
+    @property
+    def job(self):
         return self._job
 
-    def set_state(self, state):
-        self._state = state
+    @job.setter
+    def job(self, job):
+        self._job = job
 
-    def get_state(self):
+    @property
+    def state(self):
         return self._state
+
+    @state.setter
+    def state(self, state):
+        self._state = state
 
     def __str__(self):
         return 'HostTestState: %s %s %s' % (self._host, self._job, self._state)
@@ -53,7 +62,7 @@ class PersistentTestStore(object):
     def save(self):
         store = {}
         for h in self._hosts:
-            store[h.get_host()] = {'job': h.get_job(), 'state': h.get_state()}
+            store[h.host] = {'job': h.job, 'state': h.state}
         with open(self._file_name, 'w') as f:
             json.dump(store, f)
 
@@ -74,22 +83,22 @@ class SyncServer(object):
     def set_state(self, host, job, state):
         info("SyncServer, setting state: host=%s, job=%s, state=%s", host, job, state)
         try:
-            old_job = self._store[host].get_job()
-            old_state = self._store[host].get_state()
-            self._store[host].set_job(job)
-            self._store[host].set_state(state)
+            old_job = self._store[host].job
+            old_state = self._store[host].state
+            self._store[host].job = job
+            self._store[host].state = state
             info('SyncServer, updating state: host=%s, old_job=%s, new_job=%s, old_state=%s, new_state=%s', host,
                   old_job, job, old_state, state)
         except KeyError:
             debug('SyncServer, creating state: host=%s, job=%s, state=%s', host, job, state)
             self._store[host] = HostJobState(host, job)
-            self._store[host].set_state(state)
+            self._store[host].state = state
 
     def get_state(self, host):
         try:
             item = self._store[host]
-            info('SyncServer, returning state: host=%s, job=%s, state=%s', host, item.get_job(), item.get_state())
-            return item.get_job(), item.get_state()
+            info('SyncServer, returning state: host=%s, job=%s, state=%s', host, item.job, item.state)
+            return item.job, item.state
         except KeyError:
             info('SyncServer, state not found host: %s', host)
             return None, None
