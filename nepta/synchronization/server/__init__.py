@@ -51,6 +51,7 @@ class PersistentTestStore(object):
     def __init__(self, file_name='sync_state.json'):
         self._file_name = file_name
         self._hosts = {}
+        self.load()
 
     def __getitem__(self, key):
         return self._hosts[key]
@@ -71,8 +72,9 @@ class PersistentTestStore(object):
         with open(self._file_name, 'r') as f:
             store = json.load(f)
             for host, state in store.items():
-                self._hosts[host] = HostJobState(host=host, job=state['job'])
-                self._hosts[host].set_state(state['state'])
+                s = HostJobState(host=host, job=state['job'], state=state['state'])
+                self._hosts[host] = s
+                info('loading state %s' % s)
 
 
 class SyncServer(object):
