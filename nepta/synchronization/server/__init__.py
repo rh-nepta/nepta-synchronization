@@ -39,7 +39,8 @@ class HostJobState(object):
         self._state = state
 
     def __str__(self):
-        return 'HostTestState: %s %s %s' % (self._host, self._job, self._state)
+        return 'HostTestState host:%s job:%s state:%s' %\
+               (self._host, self._job, self._state)
 
 
 class HostTestStore(list):
