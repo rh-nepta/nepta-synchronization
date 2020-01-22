@@ -9,10 +9,10 @@ except ImportError:
 
 
 class HostJobState(object):
-    def __init__(self, host, job):
+    def __init__(self, host, job, state):
         self._host = host
         self._job = job
-        self._state = None
+        self._state = state
 
     @property
     def host(self):
@@ -91,8 +91,7 @@ class SyncServer(object):
                   old_job, job, old_state, state)
         except KeyError:
             debug('SyncServer, creating state: host=%s, job=%s, state=%s', host, job, state)
-            self._store[host] = HostJobState(host, job)
-            self._store[host].state = state
+            self._store[host] = HostJobState(host, job, state)
 
     def get_state(self, host):
         try:
