@@ -12,6 +12,27 @@ class ServerUnavailabe(Exception):
     pass
 
 
+def fault_tolerant(func):
+
+    def inner(*args, **kwargs):
+        err_no = 0
+        err_retry = 5
+        allowed_errs = 3
+        while err_no < allowed_errs:
+            try:
+                ret = func(*args, **kwargs)
+                break
+            except ConnectionRefusedError:
+                warning("Connection refused during %s", func.__name__)
+                err_no += 1
+                time.sleep(err_retry)
+        else:
+            raise ServerUnavailabe
+        return ret
+
+    return inner
+
+
 class SyncClient(object):
 
     def __init__(self, server, port=8000):
@@ -26,20 +47,11 @@ class SyncClient(object):
         debug('SyncClient, setting state host=%s, job=%s, state=%s', self.hostname, job, state)
         self.proxy.set_state(self.hostname, job, state)
 
+    @fault_tolerant
     def get_state(self, other_hostname):
         debug('SyncClient, getting state host:%s', other_hostname)
-        while self._err_no < self._allowed_errs:
-            try:
-                job, state = self.proxy.get_state(other_hostname)
-                info('SyncClient state of host:%s job:%s is %s', other_hostname, job, state)
-                break
-            except ConnectionRefusedError:
-                warning('SyncClient connection to %s:%s refused' % (self.hostname, self.port))
-                self._err_no += 1
-                time.sleep(self._err_retry)
-        else:
-            raise ServerUnavailabe
-
+        job, state = self.proxy.get_state(other_hostname)
+        info('SyncClient state of host:%s job:%s is %s', other_hostname, job, state)
         return job, state
 
     def wait_for_state(self, other_hostname, job, state, poll=20):
