@@ -8,17 +8,28 @@ except ImportError:
     from SimpleXMLRPCServer import SimpleXMLRPCServer
 
 
+def save_state(method):
+    def inner(instance, *args, **kwargs):
+        ret = method(instance, *args, **kwargs)
+        if instance.store:
+            instance.store.save()
+        return ret
+    return inner
+
+
 class HostJobState(object):
     def __init__(self, host, job, state):
         self._host = host
         self._job = job
         self._state = state
+        self.store = None
 
     @property
     def host(self):
         return self._host
 
     @host.setter
+    @save_state
     def host(self, host):
         self._host = host
 
@@ -27,6 +38,7 @@ class HostJobState(object):
         return self._job
 
     @job.setter
+    @save_state
     def job(self, job):
         self._job = job
 
@@ -35,6 +47,7 @@ class HostJobState(object):
         return self._state
 
     @state.setter
+    @save_state
     def state(self, state):
         self._state = state
 
@@ -60,6 +73,7 @@ class PersistentTestStore(object):
     def __setitem__(self, key, value):
         self._hosts[key] = value
         value.store = self
+        self.save()
 
     def save(self):
         context = {}
@@ -70,12 +84,15 @@ class PersistentTestStore(object):
 
     def load(self):
         self._hosts = {}
-        with open(self._file_name, 'r') as f:
-            store = json.load(f)
-            for host, state in store.items():
-                s = HostJobState(host=host, job=state['job'], state=state['state'])
-                self._hosts[host] = s
-                debug('loading state %s' % s)
+        try:
+            with open(self._file_name, 'r') as f:
+                store = json.load(f)
+                for host, state in store.items():
+                    s = HostJobState(host=host, job=state['job'], state=state['state'])
+                    self[host] = s
+                    debug('loading state %s' % s)
+        except FileNotFoundError:
+            info("Persistent file %s not found" % self._file_name)
 
 
 class SyncServer(object):
@@ -95,7 +112,6 @@ class SyncServer(object):
         except KeyError:
             debug('SyncServer, creating state: host %s, job %s, state %s', host, job, state)
             self._store[host] = HostJobState(host, job, state)
-        self._store.save()
 
     def get_state(self, host):
         try:
