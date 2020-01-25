@@ -9,9 +9,10 @@ except ImportError:
 
 
 def save_state(method):
-    def inner(instance, *args, **kwargs):
-        ret = method(instance, *args, **kwargs)
-        if instance.store:
+    def inner(instance, val):
+        orig = getattr(instance, method.__name__)
+        ret = method(instance, val)
+        if instance.store and orig != val:
             instance.store.save()
         return ret
     return inner
