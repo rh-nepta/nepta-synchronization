@@ -75,7 +75,7 @@ class PersistentTestStore(object):
             for host, state in store.items():
                 s = HostJobState(host=host, job=state['job'], state=state['state'])
                 self._hosts[host] = s
-                info('loading state %s' % s)
+                debug('loading state %s' % s)
 
 
 class SyncServer(object):
@@ -84,26 +84,26 @@ class SyncServer(object):
         self._store = store
 
     def set_state(self, host, job, state):
-        info("SyncServer, setting state: host=%s, job=%s, state=%s", host, job, state)
+        debug("Setting state: host %s, job %s, state %s", host, job, state)
         try:
             old_job = self._store[host].job
             old_state = self._store[host].state
             self._store[host].job = job
             self._store[host].state = state
-            info('SyncServer, updating state: host=%s, old_job=%s, new_job=%s, old_state=%s, new_state=%s', host,
+            debug('SyncServer, updating state: host %s, job %s -> %s, state=%s -> %s', host,
                   old_job, job, old_state, state)
         except KeyError:
-            debug('SyncServer, creating state: host=%s, job=%s, state=%s', host, job, state)
+            debug('SyncServer, creating state: host %s, job %s, state %s', host, job, state)
             self._store[host] = HostJobState(host, job, state)
         self._store.save()
 
     def get_state(self, host):
         try:
             item = self._store[host]
-            info('SyncServer, returning state: host=%s, job=%s, state=%s', host, item.job, item.state)
+            debug('Returning state: host %s, job %s, state %s', host, item.job, item.state)
             return item.job, item.state
         except KeyError:
-            info('SyncServer, state not found host: %s', host)
+            debug('State not found host: %s', host)
             return None, None
 
 
