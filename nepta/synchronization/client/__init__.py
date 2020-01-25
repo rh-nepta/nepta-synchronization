@@ -39,10 +39,8 @@ class SyncClient(object):
         self.hostname = socket.gethostname()
         self.port = port
         self.proxy = xmlrpc_client.ServerProxy("http://%s:%s/" % (server, port))
-        self._err_no = 0
-        self._err_retry = 5
-        self._allowed_errs = 3
 
+    @fault_tolerant
     def set_state(self, job, state):
         debug('SyncClient, setting state host=%s, job=%s, state=%s', self.hostname, job, state)
         self.proxy.set_state(self.hostname, job, state)
