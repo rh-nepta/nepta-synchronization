@@ -22,14 +22,16 @@ def fault_tolerant(method):
         if not hasattr(instance,'count') or not hasattr(instance,'timeout'):
             raise ToleranceNotAvailable
         err_no = 0
-        while err_no < instance.count:
+        cont = True
+        while cont:
             try:
+                not err_no or time.sleep(instance.timeout)
                 ret = method(instance, *args, **kwargs)
                 break
             except ConnectionError:
                 warning("Connection refused during %s", method.__name__)
                 err_no += 1
-                time.sleep(instance.timeout)
+            cont = err_no < instance.count
         else:
             raise ServerUnavailabe
         return ret
