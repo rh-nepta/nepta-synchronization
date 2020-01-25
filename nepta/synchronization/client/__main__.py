@@ -16,6 +16,12 @@ def main():
     parser.add_argument('--job', action='store', required=True)
     parser.add_argument('--set', nargs='?', action='store')
     parser.add_argument('--wait', nargs=2, action='append', metavar=('host', 'states', ))
+
+    parser.add_argument('--count', type=int, nargs='?', action='store', default=720,
+                        help='Count of unsuccesfull attempts before bailing out')
+    parser.add_argument('--timeout', type=int, nargs='?', action='store', default=10,
+                        help='Wait in second before next try when server is unavailable')
+
     parser.add_argument('-l', '--log', action='store', type=str.upper, choices=['DEBUG', 'WARNING', 'INFO', 'ERROR', 'EXCEPTION'], default=DEFAULT_LOGGING_MODE, help='Logging level [Default: %(default)s]')
 
     args = parser.parse_args()
@@ -29,7 +35,8 @@ def main():
         sys.exit(42)
 
     info('Starting synchronization client. Using synchronization server at %s:%s', args.server, args.port)
-    c = client.SyncClient(args.server, args.port)
+
+    c = client.SyncClient(args.server, args.port, args.timeout, args.count)
 
     if args.set:
         info('Setting own state: test=%s state=%s', args.job, args.set)
