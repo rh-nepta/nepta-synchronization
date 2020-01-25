@@ -12,25 +12,24 @@ class ServerUnavailabe(Exception):
     pass
 
 
-def fault_tolerant(func):
+def fault_tolerant(wait=5, count=3):
 
-    def inner(*args, **kwargs):
-        err_no = 0
-        err_retry = 5
-        allowed_errs = 3
-        while err_no < allowed_errs:
-            try:
-                ret = func(*args, **kwargs)
-                break
-            except ConnectionRefusedError:
-                warning("Connection refused during %s", func.__name__)
-                err_no += 1
-                time.sleep(err_retry)
-        else:
-            raise ServerUnavailabe
-        return ret
-
-    return inner
+    def fault_tolerant_real(func):
+        def inner(*args, **kwargs):
+            err_no = 0
+            while err_no < count:
+                try:
+                    ret = func(*args, **kwargs)
+                    break
+                except ConnectionRefusedError:
+                    warning("Connection refused during %s", func.__name__)
+                    err_no += 1
+                    time.sleep(wait)
+            else:
+                raise ServerUnavailabe
+            return ret
+        return inner
+    return fault_tolerant_real
 
 
 class SyncClient(object):
@@ -40,12 +39,12 @@ class SyncClient(object):
         self.port = port
         self.proxy = xmlrpc_client.ServerProxy("http://%s:%s/" % (server, port))
 
-    @fault_tolerant
+    @fault_tolerant(wait=1, count=5)
     def set_state(self, job, state):
         debug('SyncClient, setting state host=%s, job=%s, state=%s', self.hostname, job, state)
         self.proxy.set_state(self.hostname, job, state)
 
-    @fault_tolerant
+    @fault_tolerant(wait=1, count=5)
     def get_state(self, other_hostname):
         debug('SyncClient, getting state host:%s', other_hostname)
         job, state = self.proxy.get_state(other_hostname)
