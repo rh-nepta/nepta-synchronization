@@ -11,6 +11,7 @@ except ImportError:
 class ServerUnavailabe(Exception):
     pass
 
+
 class ToleranceNotAvailable(Exception):
     pass
 
