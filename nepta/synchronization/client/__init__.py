@@ -11,10 +11,15 @@ except ImportError:
 class ServerUnavailabe(Exception):
     pass
 
+class ToleranceNotAvailable(Exception):
+    pass
+
 
 def fault_tolerant(method):
 
     def inner(instance, *args, **kwargs):
+        if not hasattr(instance,'count') or not hasattr(instance,'timeout'):
+            raise ToleranceNotAvailable
         err_no = 0
         while err_no < instance.count:
             try:
