@@ -8,49 +8,37 @@ except ImportError:
     from SimpleXMLRPCServer import SimpleXMLRPCServer
 
 
-def save_state(method):
-    def inner(instance, val):
-        orig = getattr(instance, method.__name__)
-        ret = method(instance, val)
-        if instance.store and orig != val:
-            instance.store.save()
-        return ret
-    return inner
-
-
 class HostJobState(object):
+
+    guarded_property = {
+        'host': '_host',
+        'job': '_job',
+        'state': '_state',
+        'store': '_store',
+    }
+
     def __init__(self, host, job, state):
+        self.foo = 'foo'
         self._host = host
         self._job = job
         self._state = state
-        self.store = None
+        self._store = None
 
-    @property
-    def host(self):
-        return self._host
+    def __getattribute__(self, name):
+        try:
+            return object.__getattribute__(self, name)
+        except AttributeError:
+            guarded_name = self.guarded_property[name]
+            return object.__getattribute__(self, guarded_name)
 
-    @host.setter
-    @save_state
-    def host(self, host):
-        self._host = host
-
-    @property
-    def job(self):
-        return self._job
-
-    @job.setter
-    @save_state
-    def job(self, job):
-        self._job = job
-
-    @property
-    def state(self):
-        return self._state
-
-    @state.setter
-    @save_state
-    def state(self, state):
-        self._state = state
+    def __setattr__(self, name, value):
+        try:
+            guarded_name = self.guarded_property[name]
+            object.__setattr__(self, guarded_name, value)
+            if self._store is not None:
+                self._store.save()
+        except KeyError:
+            object.__setattr__(self, name, value)
 
     def __str__(self):
         return 'HostTestState host:%s job:%s state:%s' %\
@@ -74,7 +62,6 @@ class PersistentTestStore(object):
     def __setitem__(self, key, value):
         self._hosts[key] = value
         value.store = self
-        self.save()
 
     def save(self):
         context = {}
