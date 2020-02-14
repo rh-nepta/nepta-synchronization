@@ -1,14 +1,9 @@
 import json
 from logging import info, debug
-
-try:
-    from xmlrpc.server import SimpleXMLRPCServer
-except ImportError:
-    # this is compatible fix for python 2 and 3
-    from SimpleXMLRPCServer import SimpleXMLRPCServer
+from xmlrpc.server import SimpleXMLRPCServer
 
 
-class HostJobState(object):
+class HostJobState:
 
     guarded_property = {
         'host': '_host',
@@ -45,11 +40,7 @@ class HostJobState(object):
                (self._host, self._job, self._state)
 
 
-class HostTestStore(list):
-    pass
-
-
-class PersistentTestStore(object):
+class PersistentTestStore:
 
     def __init__(self, file_name='sync_state.json'):
         self._file_name = file_name
@@ -83,7 +74,7 @@ class PersistentTestStore(object):
             info("Persistent file %s not found" % self._file_name)
 
 
-class SyncServer(object):
+class SyncServer:
 
     def __init__(self, store):
         self._store = store
@@ -111,7 +102,7 @@ class SyncServer(object):
             return None, None
 
 
-class ServerCreator(object):
+class ServerCreator:
 
     @classmethod
     def create(cls, addr='0.0.0.0', port=8000, log=False):

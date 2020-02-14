@@ -1,11 +1,7 @@
 import socket
 import time
 from logging import warning, debug, info
-
-try:
-    import xmlrpc.client as xmlrpc_client
-except ImportError:
-    import xmlrpclib as xmlrpc_client
+import xmlrpc.client as xmlrpc_client
 
 
 class ServerUnavailabe(Exception):
@@ -38,7 +34,7 @@ def fault_tolerant(method):
     return inner
 
 
-class SyncClient(object):
+class SyncClient:
 
     def __init__(self, server, port=8000, timeout=10, count=720):
         self.hostname = socket.gethostname()
