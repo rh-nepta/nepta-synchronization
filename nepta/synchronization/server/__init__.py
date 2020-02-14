@@ -1,8 +1,10 @@
 import json
 import sys
 import pathlib
-from logging import info, debug, warning, error
+import logging
 from xmlrpc.server import SimpleXMLRPCServer
+
+logger = logging.getLogger(__name__)
 
 
 class HostJobState:
@@ -66,7 +68,7 @@ class PersistentTestStore:
             with self._path.open('w') as f:
                 json.dump(context, f)
         except PermissionError as e:
-            error("%s %s" % (e.strerror, e.filename))
+            logger.error("%s %s" % (e.strerror, e.filename))
             sys.exit(1)
 
     def load(self):
@@ -78,9 +80,9 @@ class PersistentTestStore:
                 for host, state in store.items():
                     s = HostJobState(host=host, job=state['job'], state=state['state'])
                     self[host] = s
-                    debug('loading state %s' % s)
+                    logger.debug('loading state %s' % s)
         except FileNotFoundError:
-            warning("Persistent file %s not found, creating new one" % self._path)
+            logger.warning("Persistent file %s not found, creating new one" % self._path)
             self.save()
 
 
@@ -90,25 +92,25 @@ class SyncServer:
         self._store = store
 
     def set_state(self, host, job, state):
-        debug("Setting state: host %s, job %s, state %s", host, job, state)
+        logger.debug("Setting state: host %s, job %s, state %s", host, job, state)
         try:
             old_job = self._store[host].job
             old_state = self._store[host].state
             self._store[host].job = job
             self._store[host].state = state
-            debug('SyncServer, updating state: host %s, job %s -> %s, state=%s -> %s', host,
+            logger.debug('SyncServer, updating state: host %s, job %s -> %s, state=%s -> %s', host,
                   old_job, job, old_state, state)
         except KeyError:
-            debug('SyncServer, creating state: host %s, job %s, state %s', host, job, state)
+            logger.debug('SyncServer, creating state: host %s, job %s, state %s', host, job, state)
             self._store[host] = HostJobState(host, job, state)
 
     def get_state(self, host):
         try:
             item = self._store[host]
-            debug('Returning state: host %s, job %s, state %s', host, item.job, item.state)
+            logger.debug('Returning state: host %s, job %s, state %s', host, item.job, item.state)
             return item.job, item.state
         except KeyError:
-            debug('State not found host: %s', host)
+            logger.debug('State not found host: %s', host)
             return None, None
 
 

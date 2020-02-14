@@ -1,11 +1,12 @@
 import logging
-from logging import info, error
 import sys
 import argparse
 
 from nepta.synchronization import client
 
 DEFAULT_LOGGING_MODE = 'WARNING'
+
+logger = logging.getLogger(__name__)
 
 
 def main():
@@ -30,22 +31,22 @@ def main():
     logging.basicConfig(level=args.log)
 
     if args.set is None and args.wait is None:
-        error('No operation specified, exiting.')
+        logger.error('No operation specified, exiting.')
         # this return code is special for informing executor about no operation specified
         sys.exit(42)
 
-    info('Starting synchronization client. Using synchronization server at %s:%s', args.server, args.port)
+    logger.info('Starting synchronization client. Using synchronization server at %s:%s', args.server, args.port)
 
     c = client.SyncClient(args.server, args.port, args.timeout, args.count)
 
     if args.set:
-        info('Setting own state: test=%s state=%s', args.job, args.set)
+        logger.info('Setting own state: test=%s state=%s', args.job, args.set)
         c.set_state(args.job, args.set)
 
     if args.wait:
         for sync_host, sync_states in args.wait:
             sync_state_list = sync_states.split(',')
-            info('Waiting for other host: host=%s, job=%s, state=%s', sync_host, args.job, sync_state_list)
+            logger.info('Waiting for other host: host=%s, job=%s, state=%s', sync_host, args.job, sync_state_list)
             c.wait_for_state(sync_host, args.job, sync_state_list)
 
 

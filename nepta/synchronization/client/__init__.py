@@ -1,8 +1,9 @@
 import socket
 import time
-from logging import warning, debug, info
+import logging
 import xmlrpc.client as xmlrpc_client
 
+logger = logging.getLogger(__name__)
 
 class ServerUnavailabe(Exception):
     pass
@@ -25,7 +26,7 @@ def fault_tolerant(method):
                 ret = method(instance, *args, **kwargs)
                 break
             except ConnectionError:
-                warning("Connection refused during %s", method.__name__)
+                logger.warning("Connection refused during %s", method.__name__)
                 err_no += 1
             cont = err_no < instance.count
         else:
@@ -45,18 +46,18 @@ class SyncClient:
 
     @fault_tolerant
     def set_state(self, job, state):
-        debug('SyncClient, setting state host=%s, job=%s, state=%s', self.hostname, job, state)
+        logger.debug('SyncClient, setting state host=%s, job=%s, state=%s', self.hostname, job, state)
         self.proxy.set_state(self.hostname, job, state)
 
     @fault_tolerant
     def get_state(self, other_hostname):
-        debug('SyncClient, getting state host:%s', other_hostname)
+        logger.debug('SyncClient, getting state host:%s', other_hostname)
         job, state = self.proxy.get_state(other_hostname)
-        info('SyncClient state of host:%s job:%s is %s', other_hostname, job, state)
+        logger.info('SyncClient state of host:%s job:%s is %s', other_hostname, job, state)
         return job, state
 
     def wait_for_state(self, other_hostname, job, state, poll=20):
-        debug('SyncClient, waiting for host=%s, job=%s, state=%s', other_hostname, job, state)
+        logger.debug('SyncClient, waiting for host=%s, job=%s, state=%s', other_hostname, job, state)
         current_job, current_state = self.get_state(other_hostname)
 
         while current_state not in state or current_job != job:

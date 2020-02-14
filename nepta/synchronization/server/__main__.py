@@ -1,19 +1,17 @@
 import logging
-from logging import info
 import sys
 import signal
 
 import argparse
 from nepta.synchronization import server
 
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+DEFAULT_LOGGING_MODE = 'INFO'
 
-DEFAULT_LOGGING_MODE = 'WARNING'
+logger = logging.getLogger(__name__)
 
 
 def exitf(a, b):
-    info('Exitting on user request')
+    logger.info('Exitting on user request')
     sys.exit()
 
 
@@ -30,7 +28,7 @@ def main():
     logging.basicConfig(level=args.log)
 
     signal.signal(signal.SIGINT, exitf)
-    info('Starting synchronization server at %s:%s', args.address, args.port)
+    logger.info('Starting synchronization server at %s:%s', args.address, args.port)
 
     s = server.ServerCreator.create(addr=args.address, port=args.port, store_path=args.store)
     s.serve_forever()
