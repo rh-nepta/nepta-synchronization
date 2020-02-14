@@ -1,5 +1,7 @@
 import json
-from logging import info, debug
+import sys
+import pathlib
+from logging import info, debug, warning, error
 from xmlrpc.server import SimpleXMLRPCServer
 
 
@@ -43,7 +45,7 @@ class HostJobState:
 class PersistentTestStore:
 
     def __init__(self, file_name='sync_state.json'):
-        self._file_name = file_name
+        self._path = pathlib.Path(file_name).expanduser()
         self._hosts = {}
         self.load()
 
@@ -56,22 +58,30 @@ class PersistentTestStore:
 
     def save(self):
         context = {}
-        for host, state in self._hosts.items():
-            context[state.host] = {'job': state.job, 'state': state.state}
-        with open(self._file_name, 'w') as f:
-            json.dump(context, f)
+        try:
+            for host, state in self._hosts.items():
+                context[state.host] = {'job': state.job, 'state': state.state}
+            parrent_path = self._path.parent
+            parrent_path.mkdir(parents=True, exist_ok=True)
+            with self._path.open('w') as f:
+                json.dump(context, f)
+        except PermissionError as e:
+            error("%s %s" % (e.strerror, e.filename))
+            sys.exit(1)
 
     def load(self):
         self._hosts = {}
+        path = pathlib.Path(self._path).expanduser()
         try:
-            with open(self._file_name, 'r') as f:
+            with path.open() as f:
                 store = json.load(f)
                 for host, state in store.items():
                     s = HostJobState(host=host, job=state['job'], state=state['state'])
                     self[host] = s
                     debug('loading state %s' % s)
         except FileNotFoundError:
-            info("Persistent file %s not found" % self._file_name)
+            warning("Persistent file %s not found, creating new one" % self._path)
+            self.save()
 
 
 class SyncServer:
@@ -105,8 +115,8 @@ class SyncServer:
 class ServerCreator:
 
     @classmethod
-    def create(cls, addr='0.0.0.0', port=8000, log=False):
-        store = PersistentTestStore()
+    def create(cls, addr='0.0.0.0', port=8000, store_path='sync_state.json', log=False):
+        store = PersistentTestStore(file_name=store_path)
         instance = SyncServer(store)
         xrpc_server = SimpleXMLRPCServer((addr, port), allow_none=True, logRequests=log)
         xrpc_server.register_instance(instance)
