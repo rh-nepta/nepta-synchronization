@@ -17,7 +17,6 @@ class HostJobState:
     }
 
     def __init__(self, host, job, state):
-        self.foo = 'foo'
         self._host = host
         self._job = job
         self._state = state
@@ -40,13 +39,12 @@ class HostJobState:
             object.__setattr__(self, name, value)
 
     def __str__(self):
-        return 'HostTestState host:%s job:%s state:%s' %\
-               (self._host, self._job, self._state)
+        return 'HostTestState host: %s, job: %s, state: %s' % (self._host, self._job, self._state)
 
 
 class PersistentTestStore:
 
-    def __init__(self, file_name='sync_state.json'):
+    def __init__(self, file_name):
         self._path = pathlib.Path(file_name).expanduser()
         self._hosts = {}
         self.load()
@@ -62,7 +60,11 @@ class PersistentTestStore:
         context = {}
         try:
             for host, state in self._hosts.items():
-                context[state.host] = {'job': state.job, 'state': state.state}
+                context[state.host] = {
+                    'job': state.job,
+                    'state': state.state,
+                }
+
             parrent_path = self._path.parent
             parrent_path.mkdir(parents=True, exist_ok=True)
             with self._path.open('w') as f:
@@ -80,7 +82,7 @@ class PersistentTestStore:
                 for host, state in store.items():
                     s = HostJobState(host=host, job=state['job'], state=state['state'])
                     self[host] = s
-                    logger.debug('loading state %s' % s)
+                    logger.debug('Loading state: %s' % s)
         except FileNotFoundError:
             logger.warning("Persistent file %s not found, creating new one" % self._path)
             self.save()
@@ -92,16 +94,16 @@ class SyncServer:
         self._store = store
 
     def set_state(self, host, job, state):
-        logger.debug("Setting state: host %s, job %s, state %s", host, job, state)
+        logger.debug("Setting state: host=%s, job=%s, state=%s", host, job, state)
         try:
             old_job = self._store[host].job
             old_state = self._store[host].state
             self._store[host].job = job
             self._store[host].state = state
-            logger.debug('SyncServer, updating state: host %s, job %s -> %s, state=%s -> %s', host,
+            logger.debug('SyncServer, updating state: host: %s, job %s -> %s, state=%s -> %s', host,
                   old_job, job, old_state, state)
         except KeyError:
-            logger.debug('SyncServer, creating state: host %s, job %s, state %s', host, job, state)
+            logger.debug('SyncServer, creating state: host %s, job: %s, state: %s', host, job, state)
             self._store[host] = HostJobState(host, job, state)
 
     def get_state(self, host):
@@ -116,10 +118,13 @@ class SyncServer:
 
 class ServerCreator:
 
+    DEFAULT_LISTEN_ADDR = '0.0.0.0'
+    DEFAULT_LISTEN_PORT = 8000
+
     @classmethod
-    def create(cls, addr='0.0.0.0', port=8000, store_path='sync_state.json', log=False):
+    def create(cls, store_path, addr=DEFAULT_LISTEN_ADDR, port=DEFAULT_LISTEN_PORT, log=False):
         store = PersistentTestStore(file_name=store_path)
         instance = SyncServer(store)
-        xrpc_server = SimpleXMLRPCServer((addr, port), allow_none=True, logRequests=log)
+        xrpc_server = SimpleXMLRPCServer((addr, port,), allow_none=True, logRequests=log)
         xrpc_server.register_instance(instance)
         return xrpc_server

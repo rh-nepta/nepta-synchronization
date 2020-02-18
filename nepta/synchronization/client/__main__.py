@@ -5,23 +5,24 @@ import argparse
 from nepta.synchronization import client
 
 DEFAULT_LOGGING_MODE = 'WARNING'
+DEFAULT_SYNC_SERVER = '0.0.0.0'
 
 logger = logging.getLogger(__name__)
 
 
 def main():
     parser = argparse.ArgumentParser(description='Client tool for multi-host test synchronization')
-    parser.add_argument('--server', type=str, action='store', required=True, help='Server hostname [Default: %(default)s]')
-    parser.add_argument('--port', type=int, action='store', default='8000', help='Server port [Default: %(default)s]')
+    parser.add_argument('--server', type=str, action='store', default=DEFAULT_SYNC_SERVER, help='Server hostname [Default: %(default)s]')
+    parser.add_argument('--port', type=int, action='store', default=client.SyncClient.DEFAULT_PORT, help='Server port [Default: %(default)s]')
 
-    parser.add_argument('--job', action='store', required=True)
-    parser.add_argument('--set', nargs='?', action='store')
-    parser.add_argument('--wait', nargs=2, action='append', metavar=('host', 'states', ))
+    parser.add_argument('--job', action='store', required=True, help='Beaker job ID')
+    parser.add_argument('--set', nargs='?', action='store', help='Set state')
+    parser.add_argument('--wait', nargs=2, action='append', metavar=('host', 'states',), help='Wait for host state')
 
-    parser.add_argument('--count', type=int, nargs='?', action='store', default=720,
-                        help='Count of unsuccesfull attempts before bailing out')
-    parser.add_argument('--timeout', type=int, nargs='?', action='store', default=10,
-                        help='Wait in second before next try when server is unavailable')
+    parser.add_argument('--count', type=int, nargs='?', action='store', default=client.SyncClient.NUMBER_OF_CONN_RETRIES,
+                        help='Count of unsuccesfull attempts before bailing out [Default: %(default)s]')
+    parser.add_argument('--timeout', type=int, nargs='?', action='store', default=client.SyncClient.DEFAULT_CONNECTION_TIMEOUT,
+                        help='Wait in second before next try when server is unavailable [Default: %(default)s]')
 
     parser.add_argument('-l', '--log', action='store', type=str.upper, choices=['DEBUG', 'WARNING', 'INFO', 'ERROR', 'EXCEPTION'], default=DEFAULT_LOGGING_MODE, help='Logging level [Default: %(default)s]')
 
@@ -37,7 +38,12 @@ def main():
 
     logger.info('Starting synchronization client. Using synchronization server at %s:%s', args.server, args.port)
 
-    c = client.SyncClient(args.server, args.port, args.timeout, args.count)
+    c = client.SyncClient(
+        server=args.server,
+        port=args.port,
+        timeout=args.timeout,
+        count=args.count,
+    )
 
     if args.set:
         logger.info('Setting own state: test=%s state=%s', args.job, args.set)

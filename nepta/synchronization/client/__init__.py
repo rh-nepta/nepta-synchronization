@@ -5,6 +5,7 @@ import xmlrpc.client as xmlrpc_client
 
 logger = logging.getLogger(__name__)
 
+
 class ServerUnavailabe(Exception):
     pass
 
@@ -16,8 +17,9 @@ class ToleranceNotAvailable(Exception):
 def fault_tolerant(method):
 
     def inner(instance, *args, **kwargs):
-        if not hasattr(instance,'count') or not hasattr(instance,'timeout'):
-            raise ToleranceNotAvailable
+        if not hasattr(instance, 'count') or not hasattr(instance, 'timeout'):
+            raise ToleranceNotAvailable("'count' or 'timeout' properties of decorated object were not specified!")
+
         err_no = 0
         cont = True
         while cont:
@@ -30,19 +32,24 @@ def fault_tolerant(method):
                 err_no += 1
             cont = err_no < instance.count
         else:
-            raise ServerUnavailabe
+            raise ServerUnavailabe("Max connection retries (%d) were exceeded" % instance.count)
         return ret
     return inner
 
 
 class SyncClient:
 
-    def __init__(self, server, port=8000, timeout=10, count=720):
+    DEFAULT_PORT = 8000
+    DEFAULT_CONNECTION_TIMEOUT = 10
+    NUMBER_OF_CONN_RETRIES = 720
+
+    def __init__(self, server, port=DEFAULT_PORT, timeout=DEFAULT_CONNECTION_TIMEOUT, count=NUMBER_OF_CONN_RETRIES):
         self.hostname = socket.gethostname()
         self.port = port
+        self.proxy = xmlrpc_client.ServerProxy("http://%s:%s/" % (server, port))
+
         self.timeout = timeout
         self.count = count
-        self.proxy = xmlrpc_client.ServerProxy("http://%s:%s/" % (server, port))
 
     @fault_tolerant
     def set_state(self, job, state):
@@ -51,9 +58,9 @@ class SyncClient:
 
     @fault_tolerant
     def get_state(self, other_hostname):
-        logger.debug('SyncClient, getting state host:%s', other_hostname)
+        logger.debug('SyncClient, getting state host: %s', other_hostname)
         job, state = self.proxy.get_state(other_hostname)
-        logger.info('SyncClient state of host:%s job:%s is %s', other_hostname, job, state)
+        logger.info('SyncClient state of host=%s, job=%s is %s', other_hostname, job, state)
         return job, state
 
     def wait_for_state(self, other_hostname, job, state, poll=20):
