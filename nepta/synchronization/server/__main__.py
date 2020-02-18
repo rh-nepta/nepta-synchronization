@@ -6,7 +6,7 @@ import argparse
 from nepta.synchronization import server
 
 DEFAULT_LOGGING_MODE = 'INFO'
-DEFAULT_STORAGE_FILE = '/var/run/nepta-synchronization/sync-state.json'
+DEFAULT_STORAGE_FILE = '/var/lib/nepta-synchronization/sync-state.json'
 
 logger = logging.getLogger(__name__)
 
