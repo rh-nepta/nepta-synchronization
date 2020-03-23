@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import versioneer
 from setuptools import setup
 from setuptools.command.install import install
 
@@ -11,10 +12,17 @@ class PostInstallCommand(install):
         install.run(self)
         os.system('systemctl daemon-reload')
 
+# Extending versioneer cmdclass with out post install script,
+# which reloads systemd services.
+cmdclass = versioneer.get_cmdclass()
+cmdclass.update({
+      'install': PostInstallCommand,
+    })
 
 setup(
     name='nepta-synchronization',
     version=version,
+    cmdclass=cmdclass,
     description='Synchronization for Beaker tasks',
     author=author,
     author_email=email,
@@ -38,7 +46,4 @@ setup(
             ]
         ),
     ],
-    cmdclass={
-      'install': PostInstallCommand,
-    },
 )
