@@ -27,7 +27,7 @@ def fault_tolerant(method):
                 not err_no or time.sleep(instance.timeout)
                 ret = method(instance, *args, **kwargs)
                 break
-            except ConnectionError:
+            except (ConnectionError, socket.gaierror):
                 logger.warning("Connection refused during %s", method.__name__)
                 err_no += 1
             cont = err_no < instance.count
