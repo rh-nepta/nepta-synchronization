@@ -1,4 +1,0 @@
-# The name of the package under test:
-PACKAGE_NAME=nepta-synchronization-devel
-
-FILES += Makefile.devel

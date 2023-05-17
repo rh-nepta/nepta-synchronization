@@ -1,9 +1,0 @@
-VERSION := $(shell python <<< 'from nepta import synchronization; print synchronization.__version__')
-
-rpms-clean:
-	rm -rf build dist synchronization.egg-info
-
-rpms:
-	echo 'version is' $(VERSION)
-	mkdir -p rpms
-	python3 setup.py bdist_rpm
