@@ -71,4 +71,5 @@ class SyncClient:
             current_job, current_state = self.get_state(other_hostname)
             time.sleep(poll)
 
+        time.sleep(poll) # wait for others before next move
         return current_state
