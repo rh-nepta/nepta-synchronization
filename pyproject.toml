@@ -1,0 +1,29 @@
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[project]
+name = "nepta-synchronization"
+dynamic = ["version"]
+description = "Synchronization for Beaker tasks"
+readme = "README.md"
+license = "GPL-3.0-or-later"
+authors = [
+    { name = "Adam Okuliar", email = "aokuliar@redhat.com" },
+]
+
+[project.urls]
+Documentation = "https://github.com/rh-nepta/nepta-synchronization"
+Issues = "https://github.com/rh-nepta/nepta-synchronization/issues"
+Source = "https://github.com/rh-nepta/nepta-synchronization"
+
+[project.scripts]
+sync_client = "nepta.synchronization.client.__main__:main"
+sync_server = "nepta.synchronization.server.__main__:main"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "nepta/synchronization/_version.py"
+

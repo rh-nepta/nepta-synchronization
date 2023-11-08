@@ -1,0 +1,12 @@
+[General]
+name=/performance/nepta-sync
+owner=Adrian Tomasov <atomasov@redhat.com>
+description=NePTA syncronization barier
+license=GPLv3
+confidential=no
+destructive=no
+
+[restraint]
+entry_point=./runtest.sh
+max_time=12h
+use_pty=false
