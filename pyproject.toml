@@ -27,6 +27,3 @@ source = "vcs"
 [tool.hatch.build.hooks.vcs]
 version-file = "nepta/synchronization/_version.py"
 
-[tool.hatch.build.targets.wheel.shared-data]
-"synchronization.service" = "/usr/lib/systemd/system/synchronization.service"
-
