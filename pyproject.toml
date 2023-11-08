@@ -7,6 +7,7 @@ name = "nepta-synchronization"
 dynamic = ["version"]
 description = "Synchronization for Beaker tasks"
 readme = "README.md"
+requires-python = ">=3.6"
 license = "GPL-3.0-or-later"
 authors = [
     { name = "Adam Okuliar", email = "aokuliar@redhat.com" },
