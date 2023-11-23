@@ -1,8 +1,20 @@
-image: python
+default:
+  image: python:latest
+  tags:
+    - docker
 
-include: 
+include:
   - project: kernel-performance/perfqe-gitlab-ci-templates
     file: pypi/nexus.yml
 
 stages:
+  - linters
   - publish
+
+lint:shell check:
+  stage: linters
+  image: koalaman/shellcheck-alpine:stable
+  before_script:
+    - shellcheck --version
+  script:
+    - shellcheck *.sh
