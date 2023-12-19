@@ -25,6 +25,12 @@ sync_server = "nepta.synchronization.server.__main__:main"
 [tool.hatch.version]
 source = "vcs"
 
+
+[tool.hatch.build]
+include = [
+    "nepta/*"
+]
+
 [tool.hatch.build.hooks.vcs]
 version-file = "nepta/synchronization/_version.py"
 
